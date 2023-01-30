@@ -61,13 +61,16 @@ class ExpCone(Constraint):
         self.x = Expression.cast_to_const(x)
         self.y = Expression.cast_to_const(y)
         self.z = Expression.cast_to_const(z)
+        args = [self.x, self.y, self.z]
+        for val in args:
+            if not (val.is_affine() and val.is_real()):
+                raise ValueError('All arguments must be affine and real.')
         xs, ys, zs = self.x.shape, self.y.shape, self.z.shape
         if xs != ys or xs != zs:
             msg = ("All arguments must have the same shapes. Provided arguments have"
                    "shapes %s" % str((xs, ys, zs)))
             raise ValueError(msg)
-        super(ExpCone, self).__init__([self.x, self.y, self.z],
-                                      constr_id)
+        super(ExpCone, self).__init__(args, constr_id)
 
     def __str__(self) -> str:
         return "ExpCone(%s, %s, %s)" % (self.x, self.y, self.z)
@@ -148,8 +151,10 @@ class RelEntrConeQuad(Constraint):
     """An approximate construction of the scalar relative entropy cone
 
     Definition:
+
     .. math::
-        K_{re}=\text{cl}\\{(x,y,z)\\in\\mathbb{R}_{++}\\times
+
+        K_{re}=\\text{cl}\\{(x,y,z)\\in\\mathbb{R}_{++}\\times
                 \\mathbb{R}_{++}\\times\\mathbb{R}_{++}\\:x\\log(x/y)\\leq z\\}
 
     Since the above definition is very similar to the ExpCone, we provide a conversion method.
@@ -176,6 +181,10 @@ class RelEntrConeQuad(Constraint):
         self.x = Expression.cast_to_const(x)
         self.y = Expression.cast_to_const(y)
         self.z = Expression.cast_to_const(z)
+        args = [self.x, self.y, self.z]
+        for val in args:
+            if not (val.is_affine() and val.is_real()):
+                raise ValueError('All Expression arguments must be affine and real.')
         self.m = m
         self.k = k
         xs, ys, zs = self.x.shape, self.y.shape, self.z.shape
@@ -186,7 +195,7 @@ class RelEntrConeQuad(Constraint):
         super(RelEntrConeQuad, self).__init__([self.x, self.y, self.z], constr_id)
 
     def get_data(self):
-        return [self.m, self.k]
+        return [self.m, self.k, self.id]
 
     def __str__(self) -> str:
         tup = (self.x, self.y, self.z, self.m, self.k)
@@ -260,8 +269,10 @@ class OpRelEntrConeQuad(Constraint):
     """An approximate construction of the operator relative entropy cone
 
     Definition:
+
     .. math::
-        K_{re}^n=\text{cl}\\{(X,Y,T)\\in\\mathbb{H}^n_{++}\\times
+
+        K_{re}^n=\\text{cl}\\{(X,Y,T)\\in\\mathbb{H}^n_{++}\\times
                 \\mathbb{H}^n_{++}\\times\\mathbb{H}^n_{++}\\:D_{\\text{op}}\\succeq T\\}
 
     More details on the approximation can be found in Theorem-3 on page-10 in the paper:
@@ -314,7 +325,7 @@ class OpRelEntrConeQuad(Constraint):
         super(OpRelEntrConeQuad, self).__init__([self.X, self.Y, self.Z], constr_id)
 
     def get_data(self):
-        return [self.m, self.k]
+        return [self.m, self.k, self.id]
 
     def __str__(self) -> str:
         tup = (self.X, self.Y, self.Z, self.m, self.k)
